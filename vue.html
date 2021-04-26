@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script language="JavaScript" src="vue.js"></script>
+    <style>
+        .tab-item {
+            display: inline-block;
+            background-color: gray;
+            margin-right: 3px;
+            width: 40px;
+            text-align: center;
+        }
+        
+        .navigate {
+            flex: 1;
+            overflow: hidden;
+            white-space: nowrap;
+            display: inline-block;
+        }
+        
+        .handler {
+            width: 2px;
+            margin-right: 2px;
+            background-color: #1ca513;
+        }
+        
+        .active {
+            background-color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <button @click="addTab()">+</button>
+        <div class="scroll" style="display: flex;background-color: aquamarine;" v-xyz="43">
+            <div style="width: 30px;background-color: khaki;display: none;cursor: pointer;">
+                &lt;
+            </div>
+            <div class="navigate">
+                <div style="display: inline-block;">
+                    <span class="tab-item" v-for="item in tabs" :class="[item.name,item.state]">
+              {{item.name}}
+            </span>
+                </div>
+            </div>
+            <div style="width: 30px;background-color: khaki;display: none;cursor: pointer;">
+                &gt;
+            </div>
+        </div>
+
+        <br />
+        <br />
+        <span v-for="item in tabs" class="handler" :class="item.state" @click="active(item)">
+        {{item.name}}</span
+      >
+    </div>
+
+    <script language="JavaScript">
+      Vue.directive("xyz", {
+        inserted: function(el, binding) {
+          let offsetValue = binding.value;
+          // offsetValue = offsetValue || 20;
+          let leftArrow = el.children[0];
+          let navigateDiv = el.children[1];
+          let fixWidth = navigateDiv.clientWidth;
+          let softDiv = navigateDiv.children[0];
+          let rightArrow = el.children[2];
+          navigateDiv.offset = 0;
+          // console.log(navigateDiv.offset);
+          leftArrow.addEventListener("click", function() {
+            if (navigateDiv.offset > 0) {
+              navigateDiv.offset -= offsetValue;
+            }
+            console.log("向右" + navigateDiv.offset);
+            softDiv.style.transform =
+              "translateX(" + -navigateDiv.offset + "px)";
+          });
+          navigateDiv.offset = 0;
+          rightArrow.addEventListener("click", function() {
+            let softWidth = softDiv.clientWidth;
+            fixWidth = navigateDiv.clientWidth;
+            if (softWidth - fixWidth - navigateDiv.offset > 0) {
+              navigateDiv.offset += offsetValue;
+            }
+
+            softDiv.style.transform =
+              "translateX(" + -navigateDiv.offset + "px)";
+          });
+        },
+
+        componentUpdated: function(el, binding) {
+          // console.log(el); //添加的 每一个tab 数组
+          let offsetValue = binding.value; //每个tab的宽度
+          // console.log(offsetValue);
+          let leftArrow = el.children[0];
+          let navigateDiv = el.children[1];
+          let rightArrow = el.children[2];
+
+          let softDiv = navigateDiv.children[0]; //
+
+          // console.log(softDiv); //所有的tab的父元素s
+          let fixWidth = navigateDiv.clientWidth;
+          // console.log(fixWidth); //视口宽度  可见宽度
+          let softWidth = softDiv.clientWidth; //所有tab的宽度
+          if (softWidth > fixWidth) {
+            leftArrow.style.display = "block";
+            rightArrow.style.display = "block";
+          } else {
+            leftArrow.style.display = "none";
+            rightArrow.style.display = "none";
+          }
+          let activeElement = softDiv.getElementsByClassName("active")[0];
+          let activeWidth = activeElement.clientWidth + 3;
+
+          // console.log(activeElement); //被选中后的tab
+
+          //找出被选中的下表 这个元素要移动到 可见视口
+          let currentIndex = 0;
+          for (let i = 0, len = softDiv.children.length; i < len; i++) {
+            if (softDiv.children[i] === activeElement) {
+              currentIndex = i;
+            }
+          }
+
+          // console.log(navigateDiv.offset);
+          navigateDiv.offset += offsetValue; //tab当期所在位置
+          // var weizhi = navigateDiv.offset; //临时存储当前位置
+          if (navigateDiv.offset > 0) {
+            navigateDiv.offset = 0; //只需得到当前位置后置为0  得到当前位置 然后当前位置移动到 可见视口
+          }
+          let maxCount = Math.floor(fixWidth / offsetValue); //可见视口/每个tab的宽度  存放几个tab
+          //let offsetValue = binding.value; //每个tab的宽度  数值
+          // console.log(softDiv); //所有的tab的父元素 html
+          // console.log(fixWidth); //视口宽度  可见宽度
+          // let softWidth = softDiv.clientWidth; //所有tab的宽度
+          // console.log(activeElement); //被选中后的tab
+          //currentIndex 第几个tab的下表
+          // navigateDiv.offset = softWidth - fixWidth * currentIndex;
+          if (currentIndex + 1 > maxCount) {
+            navigateDiv.offset = (currentIndex - maxCount + 1) * offsetValue;
+          } else if (currentIndex + 1 <= maxCount) {
+            navigateDiv.offset = 0;
+          }
+          softDiv.style.transform = "translateX(" + -navigateDiv.offset + "px)";
+        },
+      });
+      window.addEventListener("resize", function() {
+        let el = document.getElementsByClassName("scroll")[0];
+        let leftArrow = el.children[0];
+        let navigateDiv = el.children[1];
+        let rightArrow = el.children[2];
+
+        let softDiv = navigateDiv.children[0]; //
+        let softWidth = softDiv.clientWidth;
+        // console.log(softDiv); //所有的tab的父元素s
+        let fixWidth = navigateDiv.clientWidth;
+        if (softWidth > fixWidth) {
+          leftArrow.style.display = "block";
+          rightArrow.style.display = "block";
+        } else {
+          leftArrow.style.display = "none";
+          rightArrow.style.display = "none";
+        }
+      });
+
+      var app = new Vue({
+        el: "#app",
+        data: {
+          tabs: [],
+          activeItem: null,
+        },
+        methods: {
+          addTab: function() {
+            this.tabs.push({ name: "Tab" + this.tabs.length, state: "" });
+          },
+          active: function(item) {
+            if (this.activeItem) {
+              this.activeItem.state = "";
+            }
+            item.state = "active";
+            this.activeItem = item;
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
